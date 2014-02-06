@@ -11,10 +11,20 @@ object Dependencies {
     "org.scalatest"     %% "scalatest" % "2.0" % "test"
   )
 }
+
+object PublishTo {
+  val setting = publishTo <<= (version).apply{
+    v =>
+      if (v.trim.endsWith("SNAPSHOT"))
+        Some(Resolver.file("Snapshots", file("../mmacaulay.github.com/snapshots/")))
+      else
+        Some(Resolver.file("Releases", file("../mmacaulay.github.com/releases/")))
+  }
+}
  
 object OAuthBuild extends Build {
   val Organization = "io.mca"
-  val Version      = "0.0.1"
+  val Version      = "0.0.1-SNAPSHOT"
   val ScalaVersion = "2.10.0"
  
   lazy val OAuth = Project(
@@ -30,7 +40,8 @@ object OAuthBuild extends Build {
     organization := Organization,
     version      := Version,
     scalaVersion := ScalaVersion,
-    crossPaths   := false
+    crossPaths   := false,
+    PublishTo.setting
   )
   
   lazy val defaultSettings = buildSettings ++ Seq(
