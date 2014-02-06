@@ -1,4 +1,4 @@
-package oauth
+package io.mca.oauth
 
 import java.util.UUID
 import java.util.Date

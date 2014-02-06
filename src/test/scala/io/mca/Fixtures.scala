@@ -1,4 +1,4 @@
-package oauth
+package io.mca.oauth
 
 object Fixtures {
   object OAuthTestClient extends OAuthClient {

@@ -1,4 +1,4 @@
-package oauth
+package io.mca.oauth
 
 import org.scalatest._
 
