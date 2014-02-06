@@ -2,12 +2,11 @@ package io.mca.oauth
 
 import java.util.UUID
 import java.util.Date
-import sun.misc.BASE64Encoder
 import java.net.URLEncoder
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 
-import org.apache.commons.codec.binary.{ Base64, Hex }
+import org.apache.commons.codec.binary.Base64
 
 trait OAuthClient {
   val consumerKey: String
