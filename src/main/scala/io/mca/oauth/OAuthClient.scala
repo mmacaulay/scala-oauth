@@ -14,24 +14,36 @@ trait OAuthClient {
   val signatureMethod: String = "HMAC-SHA1"
   val version: String = "1.0"
 
-  def oAuthHeader(method: String, baseUri: String, requestParams: Seq[(String, String)], token: String, tokenSecret: String) = {
-    val oAuthParams = createOAuthParams(token)
-    val params = requestParams ++ oAuthParams
+  def tokenRequestHeader(method: String, baseUri: String, callback: Option[String]): String = {
+    val params = createOAuthParams :+ ("oauth_callback", callback.getOrElse("oob"))
 
-    val signature = createSignature(method, baseUri, params, token, tokenSecret)
+    val signature = createSignature(method, baseUri, params, "")
     val signatureParam = ("oauth_signature", signature)
 
-    "OAuth " + (oAuthParams :+ signatureParam).map { case (key, value) => 
+    oauthHeader(params :+ signatureParam)
+  }
+
+  def resourceHeader(method: String, baseUri: String, requestParams: Seq[(String, String)], token: String, tokenSecret: String): String = {
+    val oAuthParams = createOAuthParams :+ ("oauth_token", token)
+    val params = requestParams ++ oAuthParams
+
+    val signature = createSignature(method, baseUri, params, tokenSecret)
+    val signatureParam = ("oauth_signature", signature)
+
+    oauthHeader(oAuthParams :+ signatureParam)
+  }
+
+  def oauthHeader(params: Seq[(String, String)]): String = {
+    "OAuth " + params.map { case (key, value) =>
       percentEncode(key) +"=\"" + percentEncode(value) + "\""
     }.mkString(", ")
   }
 
-  def createOAuthParams(token: String) = {
+  def createOAuthParams: Seq[(String, String)] = {
     Seq(("oauth_consumer_key"      , consumerKey),
         ("oauth_nonce"             , createNonce),
         ("oauth_signature_method"  , signatureMethod),
         ("oauth_timestamp"         , createTimestamp.toString),
-        ("oauth_token"             , token),
         ("oauth_version"           , version))
   }
 
@@ -50,7 +62,7 @@ trait OAuthClient {
   }
 
   def createSignature(method: String, baseUri: String, 
-    params: Seq[(String, String)], token: String, tokenSecret: String) = {
+    params: Seq[(String, String)], tokenSecret: String) = {
 
     val parameterBaseString = parameterBase(params)
     val signatureBaseString = signatureBase(method, baseUri, parameterBaseString)

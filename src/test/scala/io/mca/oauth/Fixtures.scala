@@ -7,7 +7,7 @@ object Fixtures {
     val token = "testtoken"
     val tokenSecret ="testtokensecret"
     override def createNonce = "testnonce"
-    override def createSignature(method: String, baseUri: String, params: Seq[(String, String)], token: String, tokenSecret: String) = {
+    override def createSignature(method: String, baseUri: String, params: Seq[(String, String)], tokenSecret: String) = {
       "testsignature"
     }
 
@@ -32,8 +32,16 @@ object Fixtures {
     val requestParams = queryParams ++ formParams
   }
 
-  def oAuthHeader = {
-    OAuthTestClient.oAuthHeader("GET", "http://example.com/path/to/something", Seq(), "testtoken", "testtokensecret")
+  def resourceHeader = {
+    OAuthTestClient.resourceHeader("GET", "http://example.com/path/to/something", Seq(), "testtoken", "testtokensecret")
+  }
+
+  def tokenRequestHeader = {
+    OAuthTestClient.tokenRequestHeader("POST", "http://example.com/path/to/something", Some("http://example.com/callback"))
+  }
+
+  def tokenRequestHeaderNoCallback = {
+    OAuthTestClient.tokenRequestHeader("POST", "http://example.com/path/to/something", None)
   }
 }
 

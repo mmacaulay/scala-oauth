@@ -8,7 +8,7 @@ class OAuthClientTest extends FunSpec with Matchers {
     it("generates the expected signature base") {
       val token = Fixtures.TwitterAPITest.token
       val requestParams = Fixtures.TwitterAPITest.requestParams
-      val oAuthParams = Fixtures.TwitterAPITest.createOAuthParams(token)
+      val oAuthParams = Fixtures.TwitterAPITest.createOAuthParams :+ ("oauth_token", token)
       val params = requestParams ++ oAuthParams
       val parameterBase = Fixtures.TwitterAPITest.parameterBase(params)
       val signatureBase = Fixtures.TwitterAPITest.signatureBase("POST", "https://api.twitter.com/1/statuses/update.json", parameterBase)
@@ -25,13 +25,12 @@ class OAuthClientTest extends FunSpec with Matchers {
     it("generates the expected signature") {
       val token = Fixtures.TwitterAPITest.token
       val requestParams = Fixtures.TwitterAPITest.requestParams
-      val oAuthParams = Fixtures.TwitterAPITest.createOAuthParams(token)
+      val oAuthParams = Fixtures.TwitterAPITest.createOAuthParams :+ ("oauth_token", token)
       val params = requestParams ++ oAuthParams
 
       val signature = Fixtures.TwitterAPITest.createSignature("POST", 
         "https://api.twitter.com/1/statuses/update.json", 
-        params, 
-        Fixtures.TwitterAPITest.token, 
+        params,
         Fixtures.TwitterAPITest.tokenSecret)
 
       signature should equal("tnnArxj06cWHq44gCs1OSKk/jLY=")
@@ -42,47 +41,88 @@ class OAuthClientTest extends FunSpec with Matchers {
       val tokenSecret = Fixtures.TwitterAPITest.tokenSecret
       val requestParams = Fixtures.TwitterAPITest.requestParams
 
-      val header = Fixtures.TwitterAPITest.oAuthHeader("POST",
+      val header = Fixtures.TwitterAPITest.resourceHeader("POST",
         "https://api.twitter.com/1/statuses/update.json", 
         requestParams,
         token,
         tokenSecret)
 
-      header should equal("OAuth oauth_consumer_key=\"xvz1evFS4wEEPTGEFPHBog\", oauth_nonce=\"kYjzVBB8Y0ZFabxSWbWovY3uYSQ2pTgmZeNu2VS4cg\", oauth_signature_method=\"HMAC-SHA1\", oauth_timestamp=\"1318622958\", oauth_token=\"370773112-GmHxMAgYyLbNEtIKZeRNFsMKPR9EyMZeS9weJAEb\", oauth_version=\"1.0\", oauth_signature=\"tnnArxj06cWHq44gCs1OSKk%2FjLY%3D\"")
+      val expected = "OAuth oauth_consumer_key=\"xvz1evFS4wEEPTGEFPHBog\", oauth_nonce=\"kYjzVBB8Y0ZFabxSWbWovY3uYSQ2pTgmZeNu2VS4cg\", oauth_signature_method=\"HMAC-SHA1\", oauth_timestamp=\"1318622958\", oauth_version=\"1.0\", oauth_token=\"370773112-GmHxMAgYyLbNEtIKZeRNFsMKPR9EyMZeS9weJAEb\", oauth_signature=\"tnnArxj06cWHq44gCs1OSKk%2FjLY%3D\""
+      header should equal(expected)
     }
   }
 
-  describe("OAuth Header") {
+  describe("Resource Header") {
     it("starts with OAuth followed by a space") {
-      Fixtures.oAuthHeader should startWith("OAuth ")
+      Fixtures.resourceHeader should startWith("OAuth ")
     }
 
     it("should include the consumer key") {
-      Fixtures.oAuthHeader should include("oauth_consumer_key=\"testconsumerkey\"")
+      Fixtures.resourceHeader should include("oauth_consumer_key=\"testconsumerkey\"")
     }
 
     it("should include the nonce") {
-      Fixtures.oAuthHeader should include("oauth_nonce=\"testnonce\"")
+      Fixtures.resourceHeader should include("oauth_nonce=\"testnonce\"")
     }
 
     it("should include the signature") {
-      Fixtures.oAuthHeader should include("oauth_signature=\"testsignature\"")
+      Fixtures.resourceHeader should include("oauth_signature=\"testsignature\"")
     }
 
     it("should include the signature method") {
-      Fixtures.oAuthHeader should include("oauth_signature_method=\"HMAC-SHA1\"")
+      Fixtures.resourceHeader should include("oauth_signature_method=\"HMAC-SHA1\"")
     }
 
     it("should include the timestamp") {
-      Fixtures.oAuthHeader should include("oauth_timestamp=\"1318622958\"")
+      Fixtures.resourceHeader should include("oauth_timestamp=\"1318622958\"")
     }
 
     it("should include the token") {
-      Fixtures.oAuthHeader should include("oauth_token=\"testtoken\"")
+      Fixtures.resourceHeader should include("oauth_token=\"testtoken\"")
     }
 
     it("should include the OAuth version") {
-      Fixtures.oAuthHeader should include("oauth_version=\"1.0\"")
+      Fixtures.resourceHeader should include("oauth_version=\"1.0\"")
+    }
+  }
+
+  describe("Request Token Header") {
+    it("starts with OAuth followed by a space") {
+      Fixtures.tokenRequestHeader should startWith("OAuth ")
+    }
+
+    it("should include the consumer key") {
+      Fixtures.tokenRequestHeader should include("oauth_consumer_key=\"testconsumerkey\"")
+    }
+
+    it("should include the nonce") {
+      Fixtures.tokenRequestHeader should include("oauth_nonce=\"testnonce\"")
+    }
+
+    it("should include the signature") {
+      Fixtures.tokenRequestHeader should include("oauth_signature=\"testsignature\"")
+    }
+
+    it("should include the signature method") {
+      Fixtures.tokenRequestHeader should include("oauth_signature_method=\"HMAC-SHA1\"")
+    }
+
+    it("should include the timestamp") {
+      Fixtures.tokenRequestHeader should include("oauth_timestamp=\"1318622958\"")
+    }
+
+    it("should include the callback") {
+      Fixtures.tokenRequestHeader should include("oauth_callback=\"http%3A%2F%2Fexample.com%2Fcallback\"")
+    }
+
+    it("should include the OAuth version") {
+      Fixtures.tokenRequestHeader should include("oauth_version=\"1.0\"")
+    }
+
+    describe("when a callback is not supplied") {
+      it("should insert 'oob' in the callback parameter") {
+        Fixtures.tokenRequestHeaderNoCallback should include("oauth_callback=\"oob\"")
+      }
     }
   }
 
@@ -123,7 +163,7 @@ class OAuthClientTest extends FunSpec with Matchers {
       val baseUri = "http://example.com"
       val token = Fixtures.OAuthTestClient.token
       val requestParams = Fixtures.OAuthTestClient.requestParams
-      val oAuthParams = Fixtures.OAuthTestClient.createOAuthParams(token)
+      val oAuthParams = Fixtures.OAuthTestClient.createOAuthParams :+ ("oauth_token", token)
       val params = requestParams ++ oAuthParams
       val parameterBase = Fixtures.OAuthTestClient.parameterBase(params)
       val signatureBase = Fixtures.OAuthTestClient.signatureBase(method, baseUri, parameterBase)
@@ -135,7 +175,7 @@ class OAuthClientTest extends FunSpec with Matchers {
     it("should include base oauth params") {
       val token = Fixtures.OAuthTestClient.token
       val requestParams = Fixtures.OAuthTestClient.requestParams
-      val oAuthParams = Fixtures.OAuthTestClient.createOAuthParams(token)
+      val oAuthParams = Fixtures.OAuthTestClient.createOAuthParams :+ ("oauth_token", token)
       val params = requestParams ++ oAuthParams
       val parameterBase = Fixtures.OAuthTestClient.parameterBase(params)
       parameterBase should include("oauth_consumer_key=testconsumerkey")
